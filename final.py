@@ -7,8 +7,8 @@ from telegram.constants import ChatAction
 import requests as rs
 from langdetect import  detect
 
-news_api_key = "887bc9740f6545dd98397b07bf59ff5a"
-tele_token = "6723833954:AAEhhs_KkiXXt8Wsc6_35zg5QXLCk4W19J0"
+news_api_key = ""
+tele_token = ":"
 STOCK = ""
 
 
