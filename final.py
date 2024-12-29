@@ -1,3 +1,5 @@
+#6723833954:AAEhhs_KkiXXt8Wsc6_35zg5QXLCk4W19J0
+#a35b37e8d9ea4f4da0efa959b617c102
 from telegram import Update 
 from telegram.ext import  CommandHandler, MessageHandler, filters, ContextTypes, ApplicationBuilder
 import yfinance as yf
@@ -6,12 +8,23 @@ import logging
 from telegram.constants import ChatAction
 import requests as rs
 from langdetect import  detect
+import string
 
-news_api_key = ""
-tele_token = ":"
+news_api_key = ""#
+tele_token = ":-"
+             
 STOCK = ""
 
 
+def contains_letters(word):
+
+    for char in word:
+
+        if  char.isalpha():
+
+            return True  
+        else:
+            return False
 
 def is_valid_ticker(ticker):
     stock = yf.Ticker(ticker)
@@ -154,12 +167,15 @@ async def Get_News(update: Update , STOCK: str):
 async def sending_stock_news(update:Update , context:ContextTypes):
 
     user_message = update.message.text.upper().strip()
-    while not is_valid_ticker(user_message):
-        await update.message.reply_text(f'{STOCK} is not a valid ticker symbol, make sure you double check it ...')
-        user_message = update.message.text.upper().strip()
+    if contains_letters(user_message):
+        while not is_valid_ticker(user_message):
+            await update.message.reply_text(f'{STOCK} is not a valid ticker symbol, make sure you double check it ...')
+            user_message = update.message.text.upper().strip()
 
-    STOCK = user_message
-       
+        STOCK = user_message
+    else:
+          await update.message.reply_text(f'{user_message} is not a valid ticker symbol, make sure you double check it ...')
+              
             
     task = context.application.create_task(Get_News(update, STOCK=user_message))
     print("Task Started .... ")
