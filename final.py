@@ -10,8 +10,8 @@ import requests as rs
 from langdetect import  detect
 import string
 
-news_api_key = ""#
-tele_token = ":-"
+news_api_key = ""
+tele_token = ""
              
 STOCK = ""
 
@@ -110,58 +110,46 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) :
 
 
 async def Get_News(update: Update , STOCK: str):
-     
-     
-            try:
-     
-                EndPoint = f"https://newsapi.org/v2/everything?q={STOCK}&qInTitle='quantum computing Inc'&sortBy=relevancy&apiKey={news_api_key}"
-                art = stk.get_news(endpoint=EndPoint)
-                HeadLines, Descriptions, Urls, Sources = news_layout(art)
-               
-                await update.effective_chat.send_action(ChatAction.TYPING)
-               
 
-                try:
-                    cur_price = curr_price(Stock=STOCK)
+    EndPoint = f"https://newsapi.org/v2/everything?q={STOCK}&qInTitle='quantum computing Inc'&sortBy=relevancy&apiKey={news_api_key}"
+    art = stk.get_news(endpoint=EndPoint)
+    HeadLines, Descriptions, Urls, Sources = news_layout(art)
 
-                    if len(Descriptions) > 10:
-                           iteration = 10
-                    else:
-                           iteration = len(Descriptions)
-                    for num in range(iteration): 
-                            
-                            article_message = (
-                                f"🔸 Article number : {num+1}\n"
-                                f"----------------------------------------------------------\n"
-                                f"💰💵 Stock's Current Price : {cur_price}\n"
-                                f"----------------------------------------------------------\n"
-                                f"💠 Source : {Sources[num]}\n"
-                                f"----------------------------------------------------------\n"
-                                f"💠 Headline : {HeadLines[num]}\n"
-                                f"----------------------------------------------------------\n"
-                                f"💠 Article Description : {Descriptions[num]} \n"
-                                f"----------------------------------------------------------\n"
-                                f"💠 url to the article : {Urls[num]} \n"
-                            )
-                           
-                            await update.message.reply_text(article_message)
-                            print(f"Sending article {num}: {article_message}")
-                            await asyncio.sleep(4)
-                            print("Finished sleeping .. ")
-                except Exception as e:
-                     print(f"Error sending Article {num}\n Error: {e}")
-                finally:
-                    logging.debug("Task completed or cancelled.")
-            except Exception as main_error:
-        
-                 logging.error(f"Error fetching or sending news for '{STOCK}': {main_error}")
-                 error_mess = (
-                      "Either something went wrong while fetching the news, or the ticker symbol you provided is wrong ...\n"
-                       "Please double check the ticker symbol to make sure "
-                 )
-                 await update.message.reply_text(error_mess)
-            finally:
-                 logging.debug("Task completed or cancelled.")
+    await update.effective_chat.send_action(ChatAction.TYPING)
+
+
+    try:
+        cur_price = curr_price(Stock=STOCK)
+
+        if len(Descriptions) > 10:
+            iteration = 10
+        else:
+            iteration = len(Descriptions)
+        for num in range(iteration): 
+                
+                article_message = (
+                    f"🔸 Article number : {num+1}\n"
+                    f"----------------------------------------------------------\n"
+                    f"💰💵 Stock's Current Price : {cur_price}\n"
+                    f"----------------------------------------------------------\n"
+                    f"💠 Source : {Sources[num]}\n"
+                    f"----------------------------------------------------------\n"
+                    f"💠 Headline : {HeadLines[num]}\n"
+                    f"----------------------------------------------------------\n"
+                    f"💠 Article Description : {Descriptions[num]} \n"
+                    f"----------------------------------------------------------\n"
+                    f"💠 url to the article : {Urls[num]} \n"
+                )
+            
+                await update.message.reply_text(article_message)
+                print(f"Sending article {num}: {article_message}")
+                await asyncio.sleep(4)
+                print("Finished sleeping .. ")
+    except Exception as e:
+        print(f"Error sending Article {num}\n Error: {e}")
+    finally:
+        logging.debug("Task completed or cancelled.")
+
 
 
 async def sending_stock_news(update:Update , context:ContextTypes):
