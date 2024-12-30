@@ -1,5 +1,5 @@
-#6723833954:AAEhhs_KkiXXt8Wsc6_35zg5QXLCk4W19J0
-#a35b37e8d9ea4f4da0efa959b617c102
+
+
 from telegram import Update 
 from telegram.ext import  CommandHandler, MessageHandler, filters, ContextTypes, ApplicationBuilder
 import yfinance as yf
