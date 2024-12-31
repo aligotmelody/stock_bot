@@ -9,9 +9,14 @@ from telegram.constants import ChatAction
 import requests as rs
 from langdetect import  detect
 import string
+from datetime import datetime, timedelta
 
 news_api_key = ""
 tele_token = ""
+            
+
+today = datetime.today().date()
+yesterday = today - timedelta(days=1)
              
 STOCK = ""
 
@@ -111,7 +116,7 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) :
 
 async def Get_News(update: Update , STOCK: str):
 
-    EndPoint = f"https://newsapi.org/v2/everything?q={STOCK}&qInTitle='quantum computing Inc'&sortBy=relevancy&apiKey={news_api_key}"
+    EndPoint = f"https://newsapi.org/v2/everything?q={STOCK}&from={yesterday}&to={today}&qInTitle='quantum computing Inc'&sortBy=relevancy&apiKey={news_api_key}"
     art = stk.get_news(endpoint=EndPoint)
     HeadLines, Descriptions, Urls, Sources = news_layout(art)
 
@@ -159,13 +164,25 @@ async def sending_stock_news(update:Update , context:ContextTypes):
         while not is_valid_ticker(user_message):
             await update.message.reply_text(f'{STOCK} is not a valid ticker symbol, make sure you double check it ...')
             user_message = update.message.text.upper().strip()
-
         STOCK = user_message
+        if STOCK:
+            
+            task = context.application.create_task(Get_News(update, STOCK=STOCK))
+            print("Task Started .... ")
+            while not task.done():
+                await update.effective_chat.send_action(ChatAction.TYPING)
+                try:
+                    await asyncio.wait_for(asyncio.shield(task), 6)  # Adjust timeout as needed
+                except asyncio.TimeoutError:
+                    update.message.reply_text(f'Fetching the news ..... ')
+        else:
+            STOCK = None
+
     else:
           await update.message.reply_text(f'{user_message} is not a valid ticker symbol, make sure you double check it ...')
               
             
-    task = context.application.create_task(Get_News(update, STOCK=user_message))
+    task = context.application.create_task(Get_News(update, STOCK=STOCK))
     print("Task Started .... ")
     while not task.done():
         await update.effective_chat.send_action(ChatAction.TYPING)
