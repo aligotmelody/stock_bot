@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 
 news_api_key = ""
 tele_token = ""
-            
+             
 
 today = datetime.today().date()
 yesterday = today - timedelta(days=1)
@@ -81,10 +81,16 @@ class StockDetails():
                 
                 response.raise_for_status()
                 articles = response.json()["articles"]
-                print(articles[0])
-                self.articles  = articles[0]
-                return articles
-        
+                print(f"####### here: {articles} ")
+                try:
+                    Articles = articles[0]
+                #print(f"####### here: {articles} ")
+                #print(articles[0])
+                    #self.articles  = articles[0]
+                    return articles
+                except IndexError as e:
+                      return "none to be shown"
+            
 
 def curr_price(Stock):
         
@@ -118,7 +124,11 @@ async def Get_News(update: Update , STOCK: str):
 
     EndPoint = f"https://newsapi.org/v2/everything?q={STOCK}&from={yesterday}&to={today}&qInTitle='quantum computing Inc'&sortBy=relevancy&apiKey={news_api_key}"
     art = stk.get_news(endpoint=EndPoint)
-    HeadLines, Descriptions, Urls, Sources = news_layout(art)
+    #print(art)
+    if art == "none to be shown":
+          await update.message.reply_text("no fresh news to be shown")
+    else:
+          HeadLines, Descriptions, Urls, Sources = news_layout(art)
 
     await update.effective_chat.send_action(ChatAction.TYPING)
 
