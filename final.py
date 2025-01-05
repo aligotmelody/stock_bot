@@ -11,9 +11,10 @@ from langdetect import  detect
 import string
 from datetime import datetime, timedelta
 
+
 news_api_key = ""
 tele_token = ""
-             
+
 
 today = datetime.today().date()
 yesterday = today - timedelta(days=1)
@@ -64,17 +65,7 @@ class StockDetails():
                 self.urls = []
 
 
-        def news_layout(self):  
-               
-                for num in range(len(self.articles)) :
-                        if self.articles[num]["url"] == None or self.articles[num]["title"] == None or self.articles[num]["description"] == None or self.articles[num]["source"] == None or  "Suspicious Activity Detected" in self.articles[num]["description"]:
-                                continue
-                        else:
-                                self.headlines.append(self.articles[num]["title"])
-                                self.descriptions.append(self.articles[num]["description"])
-                                self.urls.append(self.articles[num]["url"])
-                               
-                                self.sources.append((self.articles[num]["source"]["name"]))
+      
         def get_news(self, endpoint):
                 
                 response = rs.get(url=endpoint)
@@ -126,7 +117,7 @@ async def Get_News(update: Update , STOCK: str):
     art = stk.get_news(endpoint=EndPoint)
     #print(art)
     if art == "none to be shown":
-          await update.message.reply_text("no fresh news to be shown")
+          await update.message.reply_text(f"seems like there aren't any fresh news regarding {STOCK} ")
     else:
           HeadLines, Descriptions, Urls, Sources = news_layout(art)
 
@@ -155,10 +146,10 @@ async def Get_News(update: Update , STOCK: str):
                     f"----------------------------------------------------------\n"
                     f"💠 url to the article : {Urls[num]} \n"
                 )
-            
+                await update.effective_chat.send_action(ChatAction.TYPING)
                 await update.message.reply_text(article_message)
                 print(f"Sending article {num}: {article_message}")
-                await asyncio.sleep(4)
+                await asyncio.sleep(3)
                 print("Finished sleeping .. ")
     except Exception as e:
         print(f"Error sending Article {num}\n Error: {e}")
@@ -171,7 +162,8 @@ async def sending_stock_news(update:Update , context:ContextTypes):
 
     user_message = update.message.text.upper().strip()
     if contains_letters(user_message):
-        while not is_valid_ticker(user_message):
+        if not is_valid_ticker(user_message):
+            await update.effective_chat.send_action(ChatAction.TYPING)
             await update.message.reply_text(f'{STOCK} is not a valid ticker symbol, make sure you double check it ...')
             user_message = update.message.text.upper().strip()
         STOCK = user_message
@@ -179,12 +171,13 @@ async def sending_stock_news(update:Update , context:ContextTypes):
             
             task = context.application.create_task(Get_News(update, STOCK=STOCK))
             print("Task Started .... ")
-            while not task.done():
-                await update.effective_chat.send_action(ChatAction.TYPING)
-                try:
-                    await asyncio.wait_for(asyncio.shield(task), 6)  # Adjust timeout as needed
-                except asyncio.TimeoutError:
-                    update.message.reply_text(f'Fetching the news ..... ')
+            await update.effective_chat.send_action(ChatAction.TYPING)
+            # while not task.done():
+            #     await update.effective_chat.send_action(ChatAction.TYPING)
+            #     try:
+            #         await asyncio.wait_for(asyncio.shield(task), 6)  # Adjust timeout as needed
+            #     except asyncio.TimeoutError:
+            #         update.message.reply_text(f'Fetching the news ..... ')
         else:
             STOCK = None
 
@@ -192,14 +185,14 @@ async def sending_stock_news(update:Update , context:ContextTypes):
           await update.message.reply_text(f'{user_message} is not a valid ticker symbol, make sure you double check it ...')
               
             
-    task = context.application.create_task(Get_News(update, STOCK=STOCK))
-    print("Task Started .... ")
-    while not task.done():
-        await update.effective_chat.send_action(ChatAction.TYPING)
-        try:
-            await asyncio.wait_for(asyncio.shield(task), 6)  # Adjust timeout as needed
-        except asyncio.TimeoutError:
-              update.message.reply_text(f'Fetching the news ..... ')
+    # task = context.application.create_task(Get_News(update, STOCK=STOCK))
+    # print("Task Started .... ")
+    # while not task.done():
+    #     await update.effective_chat.send_action(ChatAction.TYPING)
+    #     try:
+    #         await asyncio.wait_for(asyncio.shield(task), 6)  # Adjust timeout as needed
+    #     except asyncio.TimeoutError:
+    #           update.message.reply_text(f'Fetching the news ..... ')
 
 
 
