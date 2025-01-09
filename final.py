@@ -31,10 +31,13 @@ def contains_letters(word):
             return True  
         else:
             return False
-
 def is_valid_ticker(ticker):
     stock = yf.Ticker(ticker)
-    return stock.info['symbol'] is not None
+    print(f"stock out : {stock}")
+    if stock:
+           return True
+    else:
+           return False
 
 
 def news_layout(articles):  
@@ -68,11 +71,13 @@ class StockDetails():
       
         def get_news(self, endpoint):
                 
-                response = rs.get(url=endpoint)
+                try:    
+                    response = rs.get(url=endpoint)
                 
-                response.raise_for_status()
-                articles = response.json()["articles"]
-                print(f"####### here: {articles} ")
+                    articles = response.json()["articles"]
+                    print(f"####### here: {articles} ")
+                except ConnectionRefusedError as e :
+                      return "404"
                 try:
                     Articles = articles[0]
                 #print(f"####### here: {articles} ")
@@ -87,7 +92,13 @@ def curr_price(Stock):
         
         ticker = yf.Ticker(Stock)
         info = ticker.get_info()
-        return info["currentPrice"]        
+        if info:
+              if not info["trailingPegRatio"]:
+                return None    
+              else:
+                    return info["currentPrice"]
+        else:
+              return None       
 
 stk = StockDetails()
 
@@ -118,6 +129,9 @@ async def Get_News(update: Update , STOCK: str):
     #print(art)
     if art == "none to be shown":
           await update.message.reply_text(f"seems like there aren't any fresh news regarding {STOCK} ")
+    elif  "404" in art:
+          await update.message.reply_text(f"the api won't have the stock symbol {STOCK} , seems like it's not registered for some reason ..")
+
     else:
           HeadLines, Descriptions, Urls, Sources = news_layout(art)
 
@@ -126,35 +140,39 @@ async def Get_News(update: Update , STOCK: str):
 
     try:
         cur_price = curr_price(Stock=STOCK)
-
-        if len(Descriptions) > 10:
-            iteration = 10
+        if cur_price:
+                if len(Descriptions) > 10:
+                     iteration = 10
+                else:
+                    iteration = len(Descriptions)
+                    for num in range(iteration): 
+                            
+                            article_message = (
+                                f"🔸 Article number : {num+1}\n"
+                                f"----------------------------------------------------------\n"
+                                f"💰💵 Stock's Current Price : {cur_price}\n"
+                                f"----------------------------------------------------------\n"
+                                f"💠 Source : {Sources[num]}\n"
+                                f"----------------------------------------------------------\n"
+                                f"💠 Headline : {HeadLines[num]}\n"
+                                f"----------------------------------------------------------\n"
+                                f"💠 Article Description : {Descriptions[num]} \n"
+                                f"----------------------------------------------------------\n"
+                                f"💠 url to the article : {Urls[num]} \n"
+                            )
+                            await update.effective_chat.send_action(ChatAction.TYPING)
+                            await update.message.reply_text(article_message)
+                            print(f"Sending article {num}: {article_message}")
+                            await asyncio.sleep(3)
+                            print("Finished sleeping .. ")
         else:
-            iteration = len(Descriptions)
-        for num in range(iteration): 
-                
-                article_message = (
-                    f"🔸 Article number : {num+1}\n"
-                    f"----------------------------------------------------------\n"
-                    f"💰💵 Stock's Current Price : {cur_price}\n"
-                    f"----------------------------------------------------------\n"
-                    f"💠 Source : {Sources[num]}\n"
-                    f"----------------------------------------------------------\n"
-                    f"💠 Headline : {HeadLines[num]}\n"
-                    f"----------------------------------------------------------\n"
-                    f"💠 Article Description : {Descriptions[num]} \n"
-                    f"----------------------------------------------------------\n"
-                    f"💠 url to the article : {Urls[num]} \n"
-                )
-                await update.effective_chat.send_action(ChatAction.TYPING)
-                await update.message.reply_text(article_message)
-                print(f"Sending article {num}: {article_message}")
-                await asyncio.sleep(3)
-                print("Finished sleeping .. ")
+              pass
+              
     except Exception as e:
         print(f"Error sending Article {num}\n Error: {e}")
     finally:
         logging.debug("Task completed or cancelled.")
+       
 
 
 
