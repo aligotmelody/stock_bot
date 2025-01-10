@@ -73,32 +73,32 @@ class StockDetails():
                 
                 try:    
                     response = rs.get(url=endpoint)
-                
                     articles = response.json()["articles"]
-                    print(f"####### here: {articles} ")
+                    Articles = articles[0]
+                
                 except ConnectionRefusedError as e :
                       return "404"
-                try:
-                    Articles = articles[0]
-                #print(f"####### here: {articles} ")
-                #print(articles[0])
-                    #self.articles  = articles[0]
-                    return articles
+              
                 except IndexError as e:
                       return "none to be shown"
+                else:
+                      print(f"####### here:  ")#articles
+                      return articles
             
 
 def curr_price(Stock):
         
         ticker = yf.Ticker(Stock)
         info = ticker.get_info()
+        print(f"###INFO: {info}")
         if info:
-              if not info["trailingPegRatio"]:
-                return None    
-              else:
-                    return info["currentPrice"]
-        else:
-              return None       
+               try:
+                    price = info["currentPrice"]
+                      
+               except KeyError as e :
+                      return "no current price keyword"
+               else:
+                      return price
 
 stk = StockDetails()
 
@@ -134,39 +134,43 @@ async def Get_News(update: Update , STOCK: str):
 
     else:
           HeadLines, Descriptions, Urls, Sources = news_layout(art)
+          print(f"headlines#####: {HeadLines}")
 
-    await update.effective_chat.send_action(ChatAction.TYPING)
+    #await update.effective_chat.send_action(ChatAction.TYPING)
 
 
     try:
         cur_price = curr_price(Stock=STOCK)
-        if cur_price:
-                if len(Descriptions) > 10:
-                     iteration = 10
-                else:
-                    iteration = len(Descriptions)
-                    for num in range(iteration): 
-                            
-                            article_message = (
-                                f"🔸 Article number : {num+1}\n"
-                                f"----------------------------------------------------------\n"
-                                f"💰💵 Stock's Current Price : {cur_price}\n"
-                                f"----------------------------------------------------------\n"
-                                f"💠 Source : {Sources[num]}\n"
-                                f"----------------------------------------------------------\n"
-                                f"💠 Headline : {HeadLines[num]}\n"
-                                f"----------------------------------------------------------\n"
-                                f"💠 Article Description : {Descriptions[num]} \n"
-                                f"----------------------------------------------------------\n"
-                                f"💠 url to the article : {Urls[num]} \n"
-                            )
-                            await update.effective_chat.send_action(ChatAction.TYPING)
-                            await update.message.reply_text(article_message)
-                            print(f"Sending article {num}: {article_message}")
-                            await asyncio.sleep(3)
-                            print("Finished sleeping .. ")
+        print(f"####currentPrice: {cur_price}")
+        if cur_price == "no current price keyword":
+              cur_price = "can't find the current price for this stock"
         else:
-              pass
+              cur_price = "Unexpected error"
+        if len(Descriptions) > 10:
+                iteration = 10
+        else:
+            iteration = len(Descriptions)
+        for num in range(iteration): 
+                
+                article_message = (
+                    f"🔸 Article number : {num+1}\n"
+                    f"----------------------------------------------------------\n"
+                    f"💰💵 Stock's Current Price : {cur_price}\n"
+                    f"----------------------------------------------------------\n"
+                    f"💠 Source : {Sources[num]}\n"
+                    f"----------------------------------------------------------\n"
+                    f"💠 Headline : {HeadLines[num]}\n"
+                    f"----------------------------------------------------------\n"
+                    f"💠 Article Description : {Descriptions[num]} \n"
+                    f"----------------------------------------------------------\n"
+                    f"💠 url to the article : {Urls[num]} \n"
+                )
+                await update.effective_chat.send_action(ChatAction.TYPING)
+                await update.message.reply_text(article_message)
+                print(f"Sending article {num}: {article_message}")
+                await asyncio.sleep(3)
+                print("Finished sleeping .. ")
+       
               
     except Exception as e:
         print(f"Error sending Article {num}\n Error: {e}")
